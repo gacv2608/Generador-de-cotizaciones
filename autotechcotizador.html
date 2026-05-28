@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoTech — Generador de Cotizaciones</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f0f13;color:#e0e0e0;min-height:100vh;padding:1.5rem}
+h1{font-size:13px;font-weight:700;letter-spacing:.18em;color:#38b6ff;text-transform:uppercase;margin-bottom:1.5rem;display:flex;align-items:center;gap:10px}
+h1 span{color:#555;font-weight:400}
+.grid{display:grid;grid-template-columns:360px 1fr;gap:1.5rem;max-width:1100px;margin:0 auto}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+/* EDITOR */
+.editor{}
+.sec{background:#16161c;border:1px solid #252530;border-radius:10px;padding:.85rem 1rem;margin-bottom:.7rem}
+.st{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#555;margin-bottom:.65rem;display:flex;align-items:center;gap:6px}
+.st svg{opacity:.6}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:7px}
+.f label{display:block;font-size:10.5px;color:#666;margin-bottom:3px}
+.f input,.f select,.f textarea{width:100%;font-size:12.5px;background:#1e1e26;border:1px solid #2e2e3a;border-radius:6px;color:#e0e0e0;padding:5px 8px;outline:none;transition:border-color .15s}
+.f input:focus,.f select,.f textarea:focus{border-color:#38b6ff}
+.f select{appearance:none;cursor:pointer}
+.f textarea{resize:vertical;min-height:56px;line-height:1.5}
+.itbl{width:100%;border-collapse:collapse;margin-bottom:.5rem}
+.itbl th{font-size:10px;font-weight:500;color:#555;padding:3px 4px;border-bottom:1px solid #252530;text-align:left}
+.itbl td{padding:3px 2px;vertical-align:middle}
+.itbl input,.itbl select{font-size:11.5px;background:#1e1e26;border:1px solid #2e2e3a;border-radius:5px;color:#e0e0e0;padding:4px 6px}
+.tot{text-align:right;font-size:12px;font-weight:500;color:#38b6ff;white-space:nowrap;padding-right:4px}
+.dbtn{background:none;border:none;cursor:pointer;color:#444;font-size:20px;line-height:1;padding:1px 4px;border-radius:4px;transition:color .12s}
+.dbtn:hover{color:#e24b4a}
+.addbtn{background:none;border:none;cursor:pointer;font-size:12px;color:#38b6ff;padding:5px 0;display:inline-flex;align-items:center;gap:4px;opacity:.8;transition:opacity .12s}
+.addbtn:hover{opacity:1}
+.ivar{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12px;color:#666}
+.ivar input[type=checkbox]{cursor:pointer;accent-color:#38b6ff}
+.ivar label{cursor:pointer}
+/* Logo upload */
+.logo-area{border:1px dashed #2e2e3a;border-radius:8px;padding:.65rem .9rem;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .15s,background .15s}
+.logo-area:hover{border-color:#38b6ff;background:#1a1a24}
+.logo-hint{font-size:11px;color:#555;line-height:1.5}
+.logo-hint b{color:#999;font-weight:500;display:block}
+.logo-thumb{width:44px;height:28px;object-fit:contain;border-radius:3px;display:none}
+.logo-remove{background:none;border:1px solid #333;cursor:pointer;font-size:11px;color:#666;margin-left:auto;padding:3px 8px;border-radius:5px;display:none;white-space:nowrap;transition:all .12s}
+.logo-remove:hover{border-color:#e24b4a;color:#e24b4a}
+/* Print button */
+.pbtn{width:100%;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:.5rem;border-radius:8px;background:#38b6ff;border:none;color:#0d1b2a;letter-spacing:.04em;transition:opacity .15s}
+.pbtn:hover{opacity:.85}
+
+/* QUOTE PREVIEW */
+.qwrap{position:sticky;top:1.5rem}
+.qw{border-radius:10px;overflow:hidden;background:#fff;color:#111;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;box-shadow:0 8px 40px rgba(0,0,0,.5)}
+.qh{background:#0d1b2a;padding:1.1rem 1.4rem;display:flex;justify-content:space-between;align-items:center}
+.qh-left{display:flex;flex-direction:column;justify-content:center}
+.qlogo-img{max-height:44px;max-width:150px;object-fit:contain;display:none}
+.qbrand{font-size:19px;font-weight:900;letter-spacing:.14em;color:#38b6ff}
+.qbrand b{color:#fff}
+.qsub{font-size:8px;letter-spacing:.2em;color:#2d5a78;margin-top:2px;text-transform:uppercase}
+.qta{text-align:right}
+.qti{font-size:24px;font-weight:200;color:#fff;letter-spacing:.06em}
+.qsv{font-size:9.5px;color:#2d5a78;margin-top:5px;line-height:1.55}
+.qb{padding:1.1rem 1.4rem}
+.qm{display:flex;justify-content:space-between;margin-bottom:.9rem;align-items:center}
+.qdate{font-size:11px;color:#888}
+.qfolio{font-size:13px;font-weight:700;color:#0d1b2a}
+.qfolio em{font-style:normal;font-weight:400;color:#bbb;font-size:10px;margin-right:3px}
+.qi{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-bottom:.9rem;padding-bottom:.9rem;border-bottom:1px solid #eee}
+.qib h4{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#bbb;margin-bottom:4px}
+.qib p{font-size:11px;color:#222;line-height:1.75}
+table.qt{width:100%;border-collapse:collapse;margin-bottom:.85rem}
+table.qt thead th{background:#0d1b2a;color:#fff;font-size:10px;font-weight:500;padding:7px 9px;text-align:left}
+table.qt thead th.num{text-align:right}
+table.qt thead th.xtot{background:#38b6ff;color:#0d1b2a;font-weight:700;text-align:right}
+table.qt tbody tr:nth-child(even){background:#f5f7fa}
+table.qt tbody td{padding:7px 9px;font-size:11px;color:#222;border-bottom:1px solid #f0f0f0}
+table.qt tbody td.num{text-align:right}
+table.qt tbody td.xtot{text-align:right;font-weight:600}
+.qtots{display:flex;justify-content:flex-end;margin-bottom:.9rem}
+.qtin{width:200px}
+.qtr{display:flex;justify-content:space-between;padding:4px 7px;font-size:11px;color:#666;border-bottom:1px solid #f5f5f5}
+.qtr.grand{background:#0d1b2a;color:#fff;padding:8px 10px;border-radius:4px;margin-top:4px;font-weight:700;font-size:13px;border-bottom:none}
+.qfoot{border-top:1px solid #eee;padding-top:.9rem;display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.qfoot h4{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#bbb;margin-bottom:4px}
+.qfoot p{font-size:10.5px;color:#666;line-height:1.75}
+.qsig{text-align:right;font-size:11px;font-weight:700;letter-spacing:.08em;color:#0d1b2a;margin-top:.8rem;padding-top:.8rem;border-top:1px solid #eee}
+
+@media print{
+  body{background:white;padding:0}
+  h1,.editor,.no-print{display:none!important}
+  .grid{display:block}
+  .qwrap{position:static}
+  .qw{border-radius:0;box-shadow:none}
+  .qh,.qt thead,.qt thead th,.qt thead th.xtot,.qtr.grand{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .qt tbody tr:nth-child(even){-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .qlogo-img{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+</style>
+</head>
+<body>
+
+<div style="max-width:1100px;margin:0 auto">
+  <h1>⬡ AutoTech <span>/ Generador de Cotizaciones</span></h1>
+</div>
+
+<div class="grid">
+  <!-- EDITOR -->
+  <div class="editor no-print">
+
+    <div class="sec">
+      <div class="st">📷 Logo</div>
+      <input type="file" id="logo-input" accept="image/*" style="display:none">
+      <div class="logo-area" id="logo-area" onclick="document.getElementById('logo-input').click()">
+        <svg width="20" height="20" fill="none" stroke="#555" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <div class="logo-hint"><b>Subir logo</b>PNG, JPG o SVG — fondo transparente recomendado</div>
+        <img id="logo-thumb" class="logo-thumb" alt="Logo preview">
+        <button class="logo-remove" id="logo-remove" onclick="removeLogo(event)">✕ Quitar</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="st">📄 Datos generales</div>
+      <div class="fg">
+        <div class="f"><label>Fecha</label><input type="date" id="f-date"></div>
+        <div class="f"><label>Folio</label><input type="text" id="f-folio" placeholder="0000001" maxlength="12"></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="st">👤 Cliente</div>
+      <div class="fg">
+        <div class="f"><label>Nombre</label><input type="text" id="f-nombre" placeholder="Nombre completo"></div>
+        <div class="f"><label>RFC</label><input type="text" id="f-rfc" placeholder="RFC / ID"></div>
+        <div class="f"><label>Teléfono</label><input type="tel" id="f-tel" placeholder="(834) 000 0000"></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="st">🚗 Vehículo</div>
+      <div class="fg">
+        <div class="f"><label>Marca</label><input type="text" id="f-marca" placeholder="Volkswagen"></div>
+        <div class="f"><label>Modelo</label><input type="text" id="f-modelo" placeholder="Jetta"></div>
+        <div class="f"><label>Año</label><input type="text" id="f-anio" placeholder="2019" maxlength="4"></div>
+        <div class="f"><label>VIN / No. Serie</label><input type="text" id="f-vin" placeholder="3VWC57BU..."></div>
+        <div class="f"><label>Kilometraje</label><input type="text" id="f-km" placeholder="171,338"></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="st">🔧 Servicios</div>
+      <table class="itbl">
+        <thead>
+          <tr>
+            <th style="width:50%">Descripción</th>
+            <th style="width:22%;text-align:right">Precio</th>
+            <th style="width:12%;text-align:center">Cant.</th>
+            <th style="width:13%;text-align:right">Total</th>
+            <th style="width:3%"></th>
+          </tr>
+        </thead>
+        <tbody id="itbody"></tbody>
+      </table>
+      <button class="addbtn" id="btn-add">+ Agregar servicio</button>
+      <div class="ivar">
+        <input type="checkbox" id="iva-cb">
+        <label for="iva-cb">Incluir IVA 16%</label>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="st">💳 Pago y contacto</div>
+      <div class="fg" style="grid-template-columns:1fr 1fr">
+        <div class="f"><label>Método / datos bancarios</label><textarea id="f-pago"></textarea></div>
+        <div class="f"><label>Datos de contacto</label><textarea id="f-con"></textarea></div>
+      </div>
+      <div style="margin-top:7px;max-width:220px">
+        <div class="f"><label>Nombre en firma</label><input type="text" id="f-firma"></div>
+      </div>
+    </div>
+
+    <button class="pbtn" id="btn-print">🖨 Imprimir / Guardar como PDF</button>
+  </div>
+
+  <!-- QUOTE PREVIEW -->
+  <div class="qwrap">
+    <div class="qw" id="qprev">
+      <div class="qh">
+        <div class="qh-left">
+          <img id="q-logo-img" class="qlogo-img" alt="Logo AutoTech">
+          <div id="q-brand-text">
+            <div class="qbrand">AUTO<b>TECH</b></div>
+            <div class="qsub">Servicios automotrices especializados</div>
+          </div>
+        </div>
+        <div class="qta">
+          <div class="qti">Cotización</div>
+          <div class="qsv" id="p-svcs">Servicios automotrices</div>
+        </div>
+      </div>
+      <div class="qb">
+        <div class="qm">
+          <div class="qdate" id="p-date">Fecha: —</div>
+          <div class="qfolio" id="p-folio"><em>FOLIO</em> 0000001</div>
+        </div>
+        <div class="qi">
+          <div class="qib"><h4>Cliente</h4><p id="p-cli">—</p></div>
+          <div class="qib"><h4>Vehículo</h4><p id="p-veh">—</p></div>
+        </div>
+        <table class="qt">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th class="num">Precio</th>
+              <th class="num">Cant.</th>
+              <th class="xtot">Total</th>
+            </tr>
+          </thead>
+          <tbody id="p-items"></tbody>
+        </table>
+        <div class="qtots">
+          <div class="qtin">
+            <div class="qtr"><span>Subtotal</span><span id="p-sub">$0</span></div>
+            <div class="qtr"><span id="p-iva-lbl">IVA</span><span id="p-iva">—</span></div>
+            <div class="qtr grand"><span>Total a pagar</span><span id="p-tot">$0</span></div>
+          </div>
+        </div>
+        <div class="qfoot">
+          <div><h4>Método de pago</h4><p id="p-pay">—</p></div>
+          <div><h4>Contacto</h4><p id="p-contact">—</p></div>
+        </div>
+        <div class="qsig" id="p-sig">AUTOTECH</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var CATALOG=[
+  '— Seleccionar —','Diagnóstico avanzado VAG','Actualización de software unidad principal',
+  'Codificación de módulo','Parametrización de módulo','Desbloqueo de componente',
+  'Programación de módulo / ECU','Retrofit / integración de componente','Programación de llave',
+  'Generación de duplicado de llave','Diagnóstico guiado VAG','Instalación de equipo de audio',
+  'Instalación de alarma','Instalación de GPS','Conv. vidrios manuales a eléctricos',
+  'Conv. seguros manuales a eléctricos','Integración de cámara 360','Instalación sensores de reversa',
+  'Diagnóstico sistema eléctrico','Reparación sistema eléctrico','Personalizado'
+];
+var items=[{desc:'',price:'',qty:1,custom:''}];
+var ivaOn=false;
+
+function el(id){return document.getElementById(id);}
+function gv(id){var e=el(id);return e?e.value.trim():'';}
+function fmt(n){var x=Math.round(Number(n)||0);return '$'+x.toLocaleString('es-MX');}
+function tots(){
+  var s=items.reduce(function(a,i){return a+(Number(i.price)||0)*(Number(i.qty)||1);},0);
+  var iv=ivaOn?s*.16:0;return{s:s,iv:iv,t:s+iv};
+}
+
+el('logo-input').addEventListener('change',function(e){
+  var file=e.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var d=ev.target.result;
+    el('logo-thumb').src=d;el('logo-thumb').style.display='block';
+    el('logo-remove').style.display='inline-block';
+    el('logo-area').querySelector('.logo-hint').style.display='none';
+    el('logo-area').querySelector('svg').style.display='none';
+    el('q-logo-img').src=d;el('q-logo-img').style.display='block';
+    el('q-brand-text').style.display='none';
+  };
+  reader.readAsDataURL(file);
+});
+
+function removeLogo(e){
+  e.stopPropagation();
+  el('logo-input').value='';
+  el('logo-thumb').style.display='none';el('logo-remove').style.display='none';
+  el('logo-area').querySelector('.logo-hint').style.display='';
+  el('logo-area').querySelector('svg').style.display='';
+  el('q-logo-img').style.display='none';el('q-brand-text').style.display='';
+}
+
+function renderTbl(){
+  var tb=el('itbody');tb.innerHTML='';
+  items.forEach(function(item,idx){
+    var isc=item.desc==='Personalizado';
+    var rt=(Number(item.price)||0)*(Number(item.qty)||1);
+    var opts=CATALOG.map(function(s){return '<option'+(item.desc===s?' selected':'')+'>'+s+'</option>';}).join('');
+    var tr=document.createElement('tr');
+    tr.innerHTML=
+      '<td style="width:50%">'+
+        '<select style="width:100%;font-size:11.5px;background:#1e1e26;border:1px solid #2e2e3a;border-radius:5px;color:#e0e0e0;padding:4px 5px" data-si="'+idx+'">'+opts+'</select>'+
+        '<input type="text" placeholder="Descripción del servicio" style="width:100%;margin-top:3px;font-size:11.5px;background:#1e1e26;border:1px solid #2e2e3a;border-radius:5px;color:#e0e0e0;padding:4px 6px;display:'+(isc?'block':'none')+'" value="'+(item.custom||'')+'" data-ci="'+idx+'">'+
+      '</td>'+
+      '<td style="width:22%"><input type="number" value="'+(item.price||'')+'" min="0" step="10" style="width:100%;text-align:right;font-size:11.5px;background:#1e1e26;border:1px solid #2e2e3a;border-radius:5px;color:#e0e0e0;padding:4px 6px" data-pi="'+idx+'" placeholder="0"></td>'+
+      '<td style="width:12%"><input type="number" value="'+(item.qty||1)+'" min="1" style="width:100%;text-align:center;font-size:11.5px;background:#1e1e26;border:1px solid #2e2e3a;border-radius:5px;color:#e0e0e0;padding:4px 4px" data-qi="'+idx+'"></td>'+
+      '<td class="tot">'+fmt(rt)+'</td>'+
+      '<td style="text-align:center"><button class="dbtn" data-di="'+idx+'" title="Eliminar">×</button></td>';
+    tb.appendChild(tr);
+  });
+  updatePrev();
+}
+
+el('itbody').addEventListener('change',function(e){
+  var x=e.target;
+  if(x.dataset.si!==undefined){
+    var i=+x.dataset.si;
+    items[i].desc=x.value==='— Seleccionar —'?'':x.value;
+    var ci=x.closest('tr').querySelector('[data-ci]');
+    if(ci)ci.style.display=x.value==='Personalizado'?'block':'none';
+    renderTbl();
+  }
+});
+
+el('itbody').addEventListener('input',function(e){
+  var x=e.target,i,qt;
+  if(x.dataset.pi!==undefined){
+    i=+x.dataset.pi;items[i].price=x.value;
+    qt=x.closest('tr').querySelector('.tot');
+    if(qt)qt.textContent=fmt((Number(x.value)||0)*(Number(items[i].qty)||1));
+    updatePrev();
+  }else if(x.dataset.qi!==undefined){
+    i=+x.dataset.qi;items[i].qty=+x.value||1;
+    qt=x.closest('tr').querySelector('.tot');
+    if(qt)qt.textContent=fmt((Number(items[i].price)||0)*(+x.value||1));
+    updatePrev();
+  }else if(x.dataset.ci!==undefined){items[+x.dataset.ci].custom=x.value;updatePrev();}
+});
+
+el('itbody').addEventListener('click',function(e){
+  var b=e.target.closest('[data-di]');
+  if(b&&items.length>1){items.splice(+b.dataset.di,1);renderTbl();}
+});
+
+el('btn-add').addEventListener('click',function(){
+  items.push({desc:'',price:'',qty:1,custom:''});
+  renderTbl();
+  var rows=el('itbody').querySelectorAll('tr');
+  if(rows.length)rows[rows.length-1].querySelector('select').focus();
+});
+
+el('iva-cb').addEventListener('change',function(){ivaOn=this.checked;updatePrev();});
+el('btn-print').addEventListener('click',function(){window.print();});
+
+function updatePrev(){
+  var now=new Date(),fd=gv('f-date'),dd='';
+  if(fd){var p=fd.split('-');dd=p[2]+'/'+p[1]+'/'+p[0];}
+  else{dd=String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();}
+  el('p-date').textContent='Fecha: '+dd;
+  el('p-folio').innerHTML='<em>FOLIO</em> '+(gv('f-folio')||'0000001');
+  var cp=[gv('f-nombre'),gv('f-rfc'),gv('f-tel')].filter(Boolean);
+  el('p-cli').innerHTML=cp.join('<br>')||'—';
+  var v1=[gv('f-marca'),gv('f-modelo'),gv('f-anio')].filter(Boolean).join(' ');
+  var vp=[v1,gv('f-vin'),gv('f-km')?gv('f-km')+' km':''].filter(Boolean);
+  el('p-veh').innerHTML=vp.join('<br>')||'—';
+  var pb=el('p-items');pb.innerHTML='';var any=false;
+  items.forEach(function(item){
+    var d=item.desc==='Personalizado'?(item.custom||''):(item.desc||'');
+    if(!d)return;any=true;
+    var tr=document.createElement('tr');
+    var rt=(Number(item.price)||0)*(Number(item.qty)||1);
+    tr.innerHTML='<td>'+d+'</td><td class="num">'+fmt(item.price||0)+'</td><td class="num">'+(item.qty||1)+'</td><td class="xtot">'+fmt(rt)+'</td>';
+    pb.appendChild(tr);
+  });
+  if(!any){var tr2=document.createElement('tr');tr2.innerHTML='<td colspan="4" style="text-align:center;color:#ccc;padding:14px;font-style:italic;font-size:10.5px">Los servicios aparecerán aquí</td>';pb.appendChild(tr2);}
+  var t=tots();
+  el('p-sub').textContent=fmt(t.s);
+  el('p-iva-lbl').textContent=ivaOn?'IVA (16%)':'IVA';
+  el('p-iva').textContent=ivaOn?fmt(t.iv):'—';
+  el('p-tot').textContent=fmt(t.t);
+  el('p-pay').innerHTML=gv('f-pago').replace(/\n/g,'<br>')||'—';
+  el('p-contact').innerHTML=gv('f-con').replace(/\n/g,'<br>')||'—';
+  el('p-sig').textContent=gv('f-firma')||'AUTOTECH';
+  var sn=items.filter(function(i){return i.desc&&i.desc!=='— Seleccionar —';})
+    .map(function(i){return i.desc==='Personalizado'?(i.custom||''):i.desc;}).filter(Boolean);
+  el('p-svcs').innerHTML=sn.slice(0,3).join('<br>')||'Servicios automotrices especializados';
+}
+
+['f-nombre','f-rfc','f-tel','f-marca','f-modelo','f-anio','f-vin','f-km','f-date','f-folio','f-pago','f-con','f-firma'].forEach(function(id){
+  var e=el(id);if(e){e.addEventListener('input',updatePrev);e.addEventListener('change',updatePrev);}
+});
+
+var now=new Date();
+el('f-date').value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+el('f-folio').value='0000001';
+el('f-pago').value='Efectivo\nTransferencia bancaria\nBanco: Banorte\nCLABE: 072580001307779707';
+el('f-con').value='autotechvictoria20@gmail.com\n834 150 8279\nCd. Victoria, Tamaulipas.';
+el('f-firma').value='GUSTAVO A. CRUZ VLZ.';
+renderTbl();
+</script>
+</body>
+</html>
